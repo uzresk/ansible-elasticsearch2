@@ -1,6 +1,6 @@
 # set up Elasticsearch2.x
 
-set up EFK(elasticsearch + fluentd + kibana)
+set up Elasticsearch 2.x
 
 ## Provides
 
