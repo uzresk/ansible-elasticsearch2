@@ -1,0 +1,54 @@
+---
+- name: download elasticsearch rpm
+  get_url: >
+    url={{ elasticsearch_configs.dl_url }}
+    dest={{ elasticsearch_configs.rpm_path }}
+
+- name: install elasticsearch from rpm
+  yum: name={{ elasticsearch_configs.rpm_path }}
+
+- name: elasticsearch service start and enabled
+  service: name=elasticsearch state=started enabled=yes
+
+- name: /etc/init.d/elasticsearch
+  lineinfile: >
+    dest=/etc/init.d/elasticsearch
+    state=present
+    backrefs=no
+    regexp='^{{ item.regexp }}'
+    line='{{ item.line }}'
+  with_items: "{{ elasticsearch_configs.init_params }}"
+  notify: restart elasticsearch
+
+- name: /etc/elasticsearch/elasticsearch.yml
+  template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml
+            owner=root
+            group=elasticsearch
+            mode=0750
+  notify: restart elasticsearch
+
+- name: check plugin
+  shell: "/usr/share/elasticsearch/bin/plugin list | grep {{ item.name }}"
+  register: plugin_check
+  ignore_errors: true
+  changed_when: false
+  with_items:
+    - "{{ elasticsearch_configs.plugins }}"
+
+- name: install plugins(use proxy)
+  shell: "/usr/share/elasticsearch/bin/plugin -DproxyPort={{ elasticsearch_configs.proxy_port }} -DproxyHost={{ elasticsearch_configs.proxy_host }} install {{ item.0.location }}"
+  with_together:
+    - "{{ elasticsearch_configs.plugins }}"
+    - plugin_check.results
+  when:
+    - "{{ item.1 | failed }}"
+    - "{{ elasticsearch_configs.proxy_host is defined }}"
+
+- name: install plugins(no proxy) 
+  shell: "/usr/share/elasticsearch/bin/plugin install {{ item.0.location }}"
+  with_together:
+    - "{{ elasticsearch_configs.plugins }}"
+    - plugin_check.results
+  when:
+    - "{{ item.1 | failed }}"
+    - "{{ elasticsearch_configs.proxy_host is not defined }}"

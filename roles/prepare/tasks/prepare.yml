@@ -1,0 +1,44 @@
+---
+- name: getenforce check
+  command: getenforce
+  register: sestatus
+  changed_when: false
+
+# Download and install EPEL for Centos/RHEL version 6
+- name: Download EPEL Repo - Centos/RHEL 6
+  get_url: url=http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+           dest=/tmp/epel-release-6-8.noarch.rpm
+  when: ansible_os_family == 'RedHat'
+        and ansible_distribution_major_version == '6'
+        and "{{ sestatus.stdout != 'Disabled' }}"
+
+- name: Install EPEL Repo - Centos/RHEL 6
+  command: rpm -ivh /tmp/epel-release-6-8.noarch.rpm creates=/etc/yum.repos.d/epel.repo
+  when: ansible_os_family == 'RedHat'
+        and ansible_distribution_major_version == '6'
+        and "{{ sestatus.stdout != 'Disabled' }}"
+
+# Download and install EPEL for Centos/RHEL version 7
+- name: Download EPEL Repo - Centos/RHEL 7
+  get_url: url=http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+           dest=/tmp/epel-release-7-5.noarch.rpm
+  when: ansible_os_family == 'RedHat'
+        and ansible_distribution_major_version == '7'
+        and "{{ sestatus.stdout != 'Disabled' }}"
+
+- name: Install EPEL Repo - Centos/RHEL 7
+  command: rpm -ivh /tmp/epel-release-7-5.noarch.rpm creates=/etc/yum.repos.d/epel.repo
+  when: ansible_os_family == 'RedHat'
+        and ansible_distribution_major_version == '7'
+        and "{{ sestatus.stdout != 'Disabled' }}"
+
+# SELinuxが有効である場合、サーバ側にlibselinux-pythonのインストールが必要
+- name: Install libselinux-python
+  yum: name=libselinux-python
+  when: sestatus.stdout.find('Disabled') == -1 
+
+- name: libselinux-python install check
+  command: rpm -qa libselinux-python
+  register: libselinux
+  changed_when: false
+
