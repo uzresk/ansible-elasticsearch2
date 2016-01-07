@@ -1,11 +1,12 @@
-# set up Elasticsearch2.x
+# Elasticsearch2.x
 
-set up Elasticsearch 2.x
+set Elasticsearch 2.x in Ansible
 
 ## Provides
 
 * java8
-* elasticsearch
+* curl
+* elasticsearch2.x
 
 ## Requires
 
@@ -15,7 +16,7 @@ set up Elasticsearch 2.x
 ## Usage
 
 ### Get the code
-`$ git clone https://github.com/uzresk/ansible-elasticsearch.git`
+`$ git clone https://github.com/uzresk/ansible-elasticsearch2.git`
 
 ### change hosts file 
 
@@ -31,8 +32,10 @@ elasticsearch_configs:
   cluster_name: test-cluster
   node_name: ${HOSTNAME}
   network_host: '_eth1:ipv4_'
+  http_port: 9200
   path_data: /var/lib/elasticsearch/
   path_logs: /var/log/elasticsearch/
+  path_repo: /var/log/elasticsearch/backup/
   bootstrap_mlockall: "true"
   init_params:
     - { regexp: 'export ES_HEAP_SIZE', line: 'export ES_HEAP_SIZE=512m' }
